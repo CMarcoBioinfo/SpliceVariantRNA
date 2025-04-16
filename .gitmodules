@@ -1,0 +1,3 @@
+[submodule "SpliceLauncher"]
+	path = SpliceLauncher
+	url = https://github.com/CMarcoBioinfo/SpliceLauncher.git
