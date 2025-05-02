@@ -1,0 +1,115 @@
+---
+# --- MAIN CONFIGURATION ---
+
+DEPENDANCES:
+    GENERAL:
+        BASH: ""  # [required] Path to Bash executable (default: bash)
+        JAVA: "" #[required] Path to JAVA exectuble compatible with Picard (default: java)
+        RSCRIPT: ""  # [required] Path to Rscript executable (default: Rscript)
+        PERL: ""  # [required] Path to Perl executable (default: perl)
+        AWK: ""  # [required] Path to Awk executable (default: awk)
+        PYTHON: ""  # [required] Path to Python executable (default: python3)
+
+    FORMATING:
+        PIGZ: ""  # [required] Path to Pigz executable (default: pigz)
+        FASTP: ""  # [required] Path to Fastp executable (default: fastp)
+
+    QC:
+        RSEQC: "" # [required] Path to RSeQC tools executable
+        FASTQC: ""  # [required] Path to FastQC executable (default: fastqc)
+        MULTIQC: ""  # [required] Path to MultiQC executable (default: multiqc)
+
+    MAPPING:
+        STAR: ""  # [required] Path to STAR executable (default: STAR)
+        PICARD: "" # [required] Path to picard.jar . Required Java compatiblity (picard.jar)
+        SAMTOOLS: ""  # [required] Path to Samtools executable (default: samtools)
+
+    ANALYSES:
+        BEDTOOLS: ""  # [required] Path to Bedtools executable (default: bedtools)
+        SPLICELAUNCHER: ""  # [required] Path to SpliceLauncher custom directory (default: SpliceLauncher)
+
+    VISUALISATION:
+        GGSASHIMI: ""  # [required] Path to GGSashimi executable (default: ggsashimi.py)
+
+# --- GENERAL PARAMETERS ---
+
+GENERAL:
+    WORKING_DIRECTORY: ""  # [optional] Path to input data tree (default: data)
+    PREFIX: ""  # [optional] Name of the run (default: actual date)
+    SAMPLES_FILE: ""  # [required] Path to samples metadata file csv
+    GENOME: ""  # [required] Path to genome reference (fasta)
+ 
+
+# --- ANNOTATION PARAMETERS
+
+ANNOTATION:
+    BED12: "" # [required] Path to BED12 compatible with RSeQC (bed12)
+    GFF3: ""  # [required] Path to GFF3 annotation file (gff3)
+    GTF: "" # [optional] Path to GTF annotation file use for sashimi plot (gtf)
+    MANE: ""  # [required] Path to MANE annotation file (default: MANE of SpliceLauncher)
+
+
+# --- MODULE ACTIVATION ---
+
+USAGE:
+    TRIMMING: 1  # [required] 0 = Disabled, 1 = Enabled (default: 0)
+    QC: 1  # [required] 0 = Disabled, 1 = Enabled (default: 0)
+    MAPPING: 1  # [required] 0 = Disabled, 1 = Enabled (default: 0)
+    SPLICELAUNCHER: 1  # [required] 0 = Disabled, 1 = Enabled (default: 0)
+
+# --- SPECIFIC PARAMETERS ---
+
+COMPRESS:
+    THREADS: 1 # [required] Number of threads for compress rules
+
+TRIMMING:
+    THREADS: 1  # [required] Number of threads for trimming process
+    LENGTH:  # [optional] Minimum read length threshold after trimming (default: 100)
+
+QUALITY_CONTROL:
+    THREADS: 1  # [required] Number of threads for quality control
+
+MAPPING:
+    INDEX:
+        SJDB_OVERHANG: # [optional] Minimum overhang length for spliced alignments (default: 99)
+        RAM: # [optional] Max RAM (bytes) allocated for genome indexing (default: total_ram * 0.5)
+        GENOME_SA_SPARSE_D: # [optional] Defines sparsity for suffix array (default: 31000000000 / ram_byte) + 1)
+        GENOME_SA_INDEX_NBASES: # [optional] Indexing string length for genome lookup (default: min(14, math.log2(genome_length) / 2 - 1)))
+        THREADS: 1 # [required] Number of threads allocated for genome indexing
+
+    ALIGN:
+        OUT_FILTER_MISMATCH_NMAX:  # [optional] Max number of mismatches allowed per read (default: 2)
+        OUT_FILTER_MULTIMAP_NMAX:  # [optional] Max number of multimapped locations per read (default: 1)
+        OUT_SJ_FILTER_INTRON_MAXVSREADN: # [optional] Max intron length relative to read size (default: 500000)
+        THREADS: 1 # [required] Number of threads allocated for alignment
+
+SPLICELAUNCHER:
+    ANALYSE:
+        GENES_OF_INTEREST: ""  # [optional] CSV file with target genes
+        NB_INTERVALS:  # [optional] Number of intervals for negative binomial ADJUSTMENT (default: 10)
+        MIN_COV:  # [optional] Minimum number of reads supporting a junction (default: 5)
+        JUNCTION_DISPLAY_THRESHOLD:  # [optional] Minimum percentage threshold to display junctions (default: 1%)
+        TRANSCRIPT_LIST: ""  # [optional] Path to a file containing the list of reference transcripts
+        REMOVE_OTHER: ""  # [optional] Remove genes with unselected transcripts to improve runtime
+        BED_OUT: 1  # [required] Generate BED files with detected junctions. 0 = Disabled, 1 = Enabled (default: 0)
+        TXT: 0  # [required] Disable raw text output. 0 = xlsx, 1 = txt (default: 0)
+        GRAPHICS: 1  # [required] Enable graphical output for results visualization. 0 = Disabled, 1 = Enabled (default: 0)
+    POST_ANALYSE:
+        STATISTICAL_JUNCTIONS:
+            MAX_SAMPLES:  # [optional] Maximum number of individuals in which a junction is classified as significant. if empty, it is not used. (default: -1)
+            THRESHOLD_SIGNIFICANCE_LEVEL:   # [optional] Adjusts the significance filtering level for junctions (default: 0)
+                                            # 0 = No filtering (keep all junctions)
+                                            # 1 = Filter * (keep *, **, ***)
+                                            # 2 = Filter ** (keep **, ***)
+                                            # 3 = Filter *** (keep ***)
+        NON_STATISTICAL_JUNCTIONS:
+            MIN_READS_SAMPLE:  # [optional] Minimum number of reads required in a sample for a junction to be considered valid (default: 10)
+            MAX_SAMPLES: # [optional] Maximum number of individuals in which a junction is classified as unique. if empty, it is not used. (default: -1)
+
+
+    SASHIMI_PLOT:
+        USE: 1  # [required] Enable sashimi plot generation. 0 = Disabled, 1 = Enabled (default: 0)
+        NUMBER_SAMPLE:  # [optional] Defines the number of additional samples, randomly selected, to include in the Sashimi plot visualization (default: 4) 
+        EXTEND_BP:  # [optional] Defines the number of flanking base pairs added to improve readability (default: 50)
+        MIN_THRESHOLD_NB_READS: #[optional] Defines the minimum number of reads required for a junction to be displayed in the Sashimi plot, set by default as half of the read count supporting each junction for the studied individual (default: nb_reads_junction/2)
+        COLOR: ""  # [optional] Color palette for visualization (default: data/1-raw_data/metadata/other/palette.txt)
