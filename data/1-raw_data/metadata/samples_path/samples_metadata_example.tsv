@@ -1,0 +1,4 @@
+id	path_read1	path_read2	sequencing_date	technology
+SAMPLE_001  /data/fastq/sample_001_R1.fastq.gz  /data/fastq/sample_001_R2.fastq.gz  20240510  Illumina
+SAMPLE_002  /data/fastq/sample_002_R1.fastq.gz  /data/fastq/sample_002_R2.fastq.gz  20240510  Nanopore
+SAMPLE_003  /data/fastq/sample_003_R1.fastq.gz  /data/fastq/sample_003_R2.fastq.gz  20240510  Illumina
