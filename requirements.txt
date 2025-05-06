@@ -1,0 +1,15 @@
+# System resource management  
+psutil  # Monitor system resources (RAM, CPU)  
+
+# Mathematical optimization and memory management  
+numpy  # Numerical calculations and algebra  
+scipy  # Optimization and advanced statistics  
+
+# Data handling and text processing  
+pandas  # Advanced data manipulation (CSV, TSV)  
+argparse  # Command-line argument parsing  
+
+# PDF and document processing  
+PyPDF2  # PDF file manipulation  
+pdfplumber  # Advanced text extraction from PDFs  
+reportlab  # PDF creation and modifications  
