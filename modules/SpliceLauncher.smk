@@ -404,3 +404,36 @@ rule move_SpliceLauncher_outputs:
             mv "$f" {params.outputs_directory}/
         done
         """
+
+# This rule generates a sample-level recap table by integrating statistical and non statistical splice junctions.
+# It uses an R script to produce annotated outputs including HGVS nomenclature, and sample-specific features.
+# The final table summarizes key splicing events in a standardized format.
+
+rule SpliceLauncher_recap:
+    input:
+        reference = genome,
+        mane = mane,
+        statisticalFile = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.statistical_junctions.filter{extension}",
+        nonStatisticalFile = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.non_statistical_junctions.filter{extension}",
+
+    output:
+        RecapFile = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.recap{extension}"
+
+    params:
+        Rscript = Rscript,
+        sample = f"{{reads}}",
+        script = os.path.join(SCR,"recap_file.r")
+
+    log:
+        stdout = f"{working_directory}/logs/SpliceLauncher/SpliceLauncher_recap/{prefix}_{unique_id}/{{group}}/{{reads}}.out",
+        stderr = f"{working_directory}/logs/SpliceLauncher/SpliceLauncher_recap/{prefix}_{unique_id}/{{group}}/{{reads}}.err"
+
+    shell:
+        "{params.Rscript} {params.script} "
+        "--statisticalFile {input.statisticalFile} "
+        "--nonStatisticalFile {input.nonStatisticalFile} "
+        "--reference {input.reference} "
+        "--mane {input.mane} "
+        "--sample {params.sample} "
+        "--output {output.RecapFile} "
+        "1> {log.stdout} 2> {log.stderr}"
