@@ -1,13 +1,13 @@
 # This rule extracts splice junctions from a sorted BAM file and converts them into a BED file. 
 # It filters reads based on strand orientation, block count, and mapping quality, using samtools, bedtools, and custom SpliceLauncher scripts.
 
-rule SpliceLauncher_create_bed:
+rule SpliceLauncher_extract_total_junctions:
     input:
         bam = os.path.abspath(f"{path_bam}{name_genome}/mapping/{{group}}/{{reads}}.markdup.bam"),
-        csi = os.path.abspath(f"{path_bam}{name_genome}/mapping/{{group}}/{{reads}}.markdup.bam.csi"),
+        csi = os.path.abspath(f"{path_bam}{name_genome}/mapping/{{group}}/{{reads}}.markdup.bam.csi")
 
     output:
-        bed = f"{path_bam}{name_genome}/SpliceLauncher/{{group}}/{{reads}}_juncs.bed"
+        bed_total = temp(f"{path_bam}{name_genome}/SpliceLauncher/{{group}}/total/{{reads}}_juncs.bed")
 
     params:
         samtools = samtools,
@@ -15,23 +15,74 @@ rule SpliceLauncher_create_bed:
         SpliceLauncher = SpliceLauncher,
         perl = perl,
         awk = awk
-    
+
+    log:
+        stderr = f"{working_directory}/logs/SpliceLauncher/SpliceLauncher_extract_total_junctions/{{group}}/{{reads}}.err"
+
+    threads: 
+        int(config["MAPPING"]["ALIGN"]["THREADS"])
+
+    shell:
+        "{params.samtools} view -@ {threads} -b {input.bam} | "
+        "{params.bedtools} bamtobed -bed12 -i stdin | "
+        "{params.awk} '{{if($10>1){{print $0}}}}' | "
+        "{params.perl} {params.SpliceLauncher}/scripts/bedBlocks2IntronsCoords.pl y - | "
+        "{params.awk} '{{if($5==255){{print $0}}}}' > {output.bed_total} 2> {log.stderr} && "
+        "{params.samtools} view -@ {threads} -b {input.bam} | "
+        "{params.bedtools} bamtobed -bed12 -i stdin | "
+        "{params.awk} '{{if($10>1){{print $0}}}}' | "
+        "{params.perl} {params.SpliceLauncher}/scripts/bedBlocks2IntronsCoords.pl n - | "
+        "{params.awk} '{{if($5==255){{print $0}}}}' >> {output.bed_total} 2>> {log.stderr}"
+
+
+rule SpliceLauncher_extract_unique_junctions:
+    input:
+        bam = os.path.abspath(f"{path_bam}{name_genome}/mapping/{{group}}/{{reads}}.markdup.bam"),
+        csi = os.path.abspath(f"{path_bam}{name_genome}/mapping/{{group}}/{{reads}}.markdup.bam.csi")
+
+    output:
+        bed_unique = temp(f"{path_bam}{name_genome}/SpliceLauncher/{{group}}/unique/{{reads}}_juncs.bed")
+
+    params:
+        samtools = samtools,
+        bedtools = bedtools,
+        SpliceLauncher = SpliceLauncher,
+        perl = perl,
+        awk = awk
+
+    log:
+        stderr = f"{working_directory}/logs/SpliceLauncher/SpliceLauncher_extract_unique_junctions/{{group}}/{{reads}}.err"
+        
+    threads:
+        int(config["MAPPING"]["ALIGN"]["THREADS"])
+
+    shell:
+        "{params.samtools} view -@ {threads} -b -f 0x40 -F 1024 {input.bam} | "
+        "{params.bedtools} bamtobed -bed12 -i stdin | "
+        "{params.awk} '{{if($10>1){{print $0}}}}' | "
+        "{params.perl} {params.SpliceLauncher}/scripts/bedBlocks2IntronsCoords.pl y - | "
+        "{params.awk} '{{if($5==255){{print $0}}}}' > {output.bed_unique} 2> {log.stderr} && "
+        "{params.samtools} view -@ {threads} -b -f 0x80 -F 1024 {input.bam} | "
+        "{params.bedtools} bamtobed -bed12 -i stdin | "
+        "{params.awk} '{{if($10>1){{print $0}}}}' | "
+        "{params.perl} {params.SpliceLauncher}/scripts/bedBlocks2IntronsCoords.pl n - | "
+        "{params.awk} '{{if($5==255){{print $0}}}}' >> {output.bed_unique} 2>> {log.stderr}"
+
+
+
+rule SpliceLauncher_create_bed:
+    input:
+        bed_total  = f"{path_bam}{name_genome}/SpliceLauncher/{{group}}/total/{{reads}}_juncs.bed",
+        bed_unique = f"{path_bam}{name_genome}/SpliceLauncher/{{group}}/unique/{{reads}}_juncs.bed"
+
+    output:
+        bed = f"{path_bam}{name_genome}/SpliceLauncher/{{group}}/{{reads}}_juncs.bed"
+
     log:
         stderr = f"{working_directory}/logs/SpliceLauncher/SpliceLauncher_create_bed/{{group}}/{{reads}}.err"
 
     shell:
-        "{params.samtools} view "
-        "-b -f 0x40 -F 1024 {input.bam} | "
-        "{params.bedtools} bamtobed -bed12 -i stdin | "
-        "{params.awk} '{{if($10>1){{print $0}}}}' | "
-        "{params.perl} {params.SpliceLauncher}/scripts/bedBlocks2IntronsCoords.pl y - | "
-        "{params.awk} '{{if($5==255){{print $0}}}}' > {output.bed} 2> {log.stderr} && "
-        "{params.samtools} view "
-        "-b -f 0x80 -F 1024 {input.bam} | "
-        "{params.bedtools} bamtobed -bed12 -i stdin | "
-        "{params.awk} '{{if($10>1){{print $0}}}}' | "
-        "{params.perl} {params.SpliceLauncher}/scripts/bedBlocks2IntronsCoords.pl n - | "
-        "{params.awk} '{{if($5==255){{print $0}}}}' >> {output.bed} 2>> {log.stderr}"
+        "grep -F -f {input.bed_unique} {input.bed_total} > {output.bed} 2> {log.stderr}"
 
 
 # This rule processes junction information from a BED file and counts splice junctions by intersecting them with a reference annotation.
@@ -53,7 +104,7 @@ rule SpliceLauncher_count_junctions:
         stderr = f"{working_directory}/logs/SpliceLauncher/SpliceLauncher_count_junctions/{{group}}/{{reads}}.err"
 
     shell:
-        "sort -k1,1 -k2,2n {input.bed} | "
+        "LC_ALL=C sort -k1,1 -k2,2n {input.bed} | "
         "uniq -c | "
         "{params.awk} 'BEGIN{{OFS=\"\\t\"}}{{print $2,$3,$4,$1,$6,$7}}' | "
         "{params.bedtools} intersect -s -wa -wb -a stdin -b {input.bed_ref} | "
