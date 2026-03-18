@@ -1,3 +1,12 @@
+# Calculates the memory allocation and sorting ratio for RSeQC based on BAM size,
+# total available memory, and a safety factor. Ensures robust performance and avoids memory overuse.
+
+def calculate_mem_RseQC(bam_path, mem_total_mb, min_mem=8000, safety_factor=2):
+    bam_size_mb = os.path.getsize(bam_path) / (1024**2)
+    mem_needed = int(bam_size_mb * safety_factor)
+    mem_mb = max(min_mem, min(mem_needed, mem_total_mb))
+    return mem_mb
+
 rule RSeQC_bam_stat:
     input:
         bam = os.path.abspath(f"{path_bam}{name_genome}/mapping/{{group}}/{{reads}}.markdup.bam"),
@@ -32,6 +41,9 @@ rule RSeQC_read_duplication:
     params:
         RSeQC = RSeQC,
         prefix = lambda wildcards: f"{path_qc}/BAM/{name_genome}/RSeQC/{wildcards.group}/{wildcards.reads}"
+    
+    resources:
+        mem_mb = lambda wildcards: calculate_mem_RseQC(f"{path_bam}{name_genome}/mapping/{wildcards.group}/{wildcards.reads}.markdup.bam",mem_total_mb,min_mem=16000,safety_factor=3)
     
     log:
         stdout = f"{working_directory}/logs/RSeQC/{{group}}/{{reads}}_read_duplication.out",
@@ -102,6 +114,9 @@ rule RSeQC_geneBody_coverage:
     params:
         RSeQC = RSeQC,
         prefix = lambda wildcards: f"{path_qc}/BAM/{name_genome}/RSeQC/{wildcards.group}/{wildcards.reads}"
+
+    resources:
+        mem_mb = lambda wildcards: calculate_mem_RseQC(f"{path_bam}{name_genome}/mapping/{wildcards.group}/{wildcards.reads}.markdup.bam",mem_total_mb)
     
     log:
         stdout = f"{working_directory}/logs/RSeQC/{{group}}/{{reads}}_geneBody_coverage.out",
@@ -156,6 +171,9 @@ rule RSeQC_junction_saturation:
     params:
         RSeQC = RSeQC,
         prefix = lambda wildcards: f"{path_qc}/BAM/{name_genome}/RSeQC/{wildcards.group}/{wildcards.reads}"
+
+    resources:
+        mem_mb = lambda wildcards: calculate_mem_RseQC(f"{path_bam}{name_genome}/mapping/{wildcards.group}/{wildcards.reads}.markdup.bam",mem_total_mb)
     
     log:
         stdout = f"{working_directory}/logs/RSeQC/{{group}}/{{reads}}.junction_saturation.out",
