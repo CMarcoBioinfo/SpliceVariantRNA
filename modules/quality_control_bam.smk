@@ -109,8 +109,8 @@ rule multiqc_bam:
         extra = add_inputs
 
     output:
-        directory_data = directory(f"{path_qc}/multiqc/BAM/{name_genome}/{prefix}_{unique_id}_data/"),
-        html = f"{path_qc}/multiqc/BAM/{name_genome}/{prefix}_{unique_id}.html"
+        directory_data = keep(directory(f"{path_qc}/multiqc/BAM/{name_genome}/{prefix}_{unique_id}_data/")),
+        html = keep(f"{path_qc}/multiqc/BAM/{name_genome}/{prefix}_{unique_id}.html")
 
     params:
         name = f"{prefix}_{unique_id}",

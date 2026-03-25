@@ -113,3 +113,7 @@ SPLICELAUNCHER:
         EXTEND_BP:  # [optional] Defines the number of flanking base pairs added to improve readability (default: 50)
         MIN_THRESHOLD_NB_READS: #[optional] Defines the minimum number of reads required for a junction to be displayed in the Sashimi plot, set by default as half of the read count supporting each junction for the studied individual (default: nb_reads_junction/2)
         COLOR: ""  # [optional] Color palette for visualization (default: data/1-raw_data/metadata/other/palette.txt)
+
+
+# --- CLEANING OPTIONS ---
+CLEANING_INTERMEDIATE: 0 # 0 = garder tout, 1 = supprimer les intermédiaires

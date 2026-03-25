@@ -153,15 +153,15 @@ rule star_align:
         SAindex = f"{working_directory}/2-processed_data/references/{name_genome}/SAindex",
 
     output:
-        sort_bam = os.path.abspath(f"{path_bam}{name_genome}/mapping/{{group}}/{{reads}}.sorted.bam"),
-        bai = f"{path_bam}{name_genome}/mapping/{{group}}/{{reads}}.sorted.bam.bai",
-        csi = f"{path_bam}{name_genome}/mapping/{{group}}/{{reads}}.sorted.bam.csi",
+        sort_bam = keep(os.path.abspath(f"{path_bam}{name_genome}/mapping/{{group}}/{{reads}}.sorted.bam")),
+        bai = keep(f"{path_bam}{name_genome}/mapping/{{group}}/{{reads}}.sorted.bam.bai"),
+        csi = keep(f"{path_bam}{name_genome}/mapping/{{group}}/{{reads}}.sorted.bam.csi"),
         log_final = f"{path_bam}{name_genome}/mapping/log_star/{{group}}/{{reads}}_Log.final.out",
         log = f"{path_bam}{name_genome}/mapping/log_star/{{group}}/{{reads}}_Log.out",
         log_progress = f"{path_bam}{name_genome}/mapping/log_star/{{group}}/{{reads}}_Log.progress.out",
-        tab = f"{path_bam}{name_genome}/mapping/log_star/{{group}}/{{reads}}_SJ.out.tab",
-        STARpass1 = directory(f"{path_bam}{name_genome}/mapping/log_star/{{group}}/{{reads}}__STARgenome"),
-        STARgenome = directory(f"{path_bam}{name_genome}/mapping/log_star/{{group}}/{{reads}}__STARpass1")
+        tab = keep(f"{path_bam}{name_genome}/mapping/log_star/{{group}}/{{reads}}_SJ.out.tab"),
+        STARpass1 = keep(directory(f"{path_bam}{name_genome}/mapping/log_star/{{group}}/{{reads}}__STARgenome")),
+        STARgenome = keep(directory(f"{path_bam}{name_genome}/mapping/log_star/{{group}}/{{reads}}__STARpass1"))
 
     params:
         star = STAR,

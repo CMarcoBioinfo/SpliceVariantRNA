@@ -9,8 +9,8 @@ rule fastp_trimming:
         read2 = os.path.abspath(f"{working_directory}/1-raw_data/fastq/{{reads}}.2.fastq.gz")
 
     output:
-        trimmed_read1 = os.path.abspath(f"{path_fastq}/{{reads}}.{{length_fastp}}bp.1.fastq.gz"),
-        trimmed_read2 = os.path.abspath(f"{path_fastq}/{{reads}}.{{length_fastp}}bp.2.fastq.gz"),
+        trimmed_read1 = keep(os.path.abspath(f"{path_fastq}/{{reads}}.{{length_fastp}}bp.1.fastq.gz")),
+        trimmed_read2 = keep(os.path.abspath(f"{path_fastq}/{{reads}}.{{length_fastp}}bp.2.fastq.gz")),
         html = f"{path_qc}/fastp_trimming/{{reads}}.{{length_fastp}}bp.html",
         json = f"{path_qc}/fastp_trimming/{{reads}}.{{length_fastp}}bp.json"
 

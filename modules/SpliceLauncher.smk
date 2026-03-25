@@ -7,7 +7,7 @@ rule SpliceLauncher_extract_total_junctions:
         csi = os.path.abspath(f"{path_bam}{name_genome}/mapping/{{group}}/{{reads}}.markdup.bam.csi")
 
     output:
-        bed_total = temp(f"{path_bam}{name_genome}/SpliceLauncher/{{group}}/total/{{reads}}_juncs.bed")
+        bed_total = keep(f"{path_bam}{name_genome}/SpliceLauncher/{{group}}/total/{{reads}}_juncs.bed")
 
     params:
         samtools = samtools,
@@ -41,7 +41,7 @@ rule SpliceLauncher_extract_unique_junctions:
         csi = os.path.abspath(f"{path_bam}{name_genome}/mapping/{{group}}/{{reads}}.markdup.bam.csi")
 
     output:
-        bed_unique = temp(f"{path_bam}{name_genome}/SpliceLauncher/{{group}}/unique/{{reads}}_juncs.bed")
+        bed_unique = keep(f"{path_bam}{name_genome}/SpliceLauncher/{{group}}/unique/{{reads}}_juncs.bed")
 
     params:
         samtools = samtools,
@@ -76,7 +76,7 @@ rule SpliceLauncher_create_bed:
         bed_unique = f"{path_bam}{name_genome}/SpliceLauncher/{{group}}/unique/{{reads}}_juncs.bed"
 
     output:
-        bed = f"{path_bam}{name_genome}/SpliceLauncher/{{group}}/{{reads}}_juncs.bed"
+        bed = keep(f"{path_bam}{name_genome}/SpliceLauncher/{{group}}/{{reads}}_juncs.bed")
 
     log:
         stderr = f"{working_directory}/logs/SpliceLauncher/SpliceLauncher_create_bed/{{group}}/{{reads}}.err"
@@ -133,12 +133,12 @@ rule SpliceLauncher_merge_count:
         counts = expand(f"{path_bam}{name_genome}/SpliceLauncher/getClosestExons/{{group}}/{{reads}}.count", zip, reads=all_samples, group=groups)
 
     output:
-        merged_files = f"{path_results}/SpliceLauncher/merged_files/{prefix}_{unique_id}.txt"
+        merged_files = keep(f"{path_results}/merged_files/{unique_id}.txt")
     
     params:
         SpliceLauncher = SpliceLauncher,
         perl = perl,
-        directory = directory(f"{path_results}/SpliceLauncher/merged_files/"),
+        directory = directory(f"{path_results}/merged_files/"),
         genes_of_interest = genes_of_interest
     
     log:
@@ -179,15 +179,15 @@ else:
 current_time = time.localtime()
 date = time.strftime("%m-%d-%Y", current_time)
 listOutputSpliceLauncher = []
-count_report = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_report_{date}.txt"
+count_report = keep(f"{path_results}/{unique_id}_report_{date}.txt")
 listOutputSpliceLauncher.append(count_report)
-outputSpliceLauncher = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/{prefix}_{unique_id}_outputSpliceLauncher{extension}"
+outputSpliceLauncher = keep(f"{path_results}/{unique_id}_results/{unique_id}_outputSpliceLauncher{extension}")
 listOutputSpliceLauncher.append(outputSpliceLauncher)
 
 bedOut =  get_config_value(config["SPLICELAUNCHER"]["ANALYSE"].get("BED_OUT"), int(0))
 if bedOut:
     bedOut = "--bedOut "
-    bed = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/{prefix}_{unique_id}.bed"
+    bed = f"{path_results}/{unique_id}_results/{prefix}_{unique_id}.bed"
     listOutputSpliceLauncher.append(bed)
 
 else:
@@ -197,10 +197,10 @@ Graphics =  get_config_value(config["SPLICELAUNCHER"]["ANALYSE"].get("GRAPHICS")
 
 if Graphics:
     Graphics = "--Graphics "
-    pdf = expand(f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{reads}}/{{reads}}.pdf", reads=all_samples)
-    pdf_statistical_genes = expand(f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{reads}}/{{reads}}.statistical_genes.pdf",  reads=all_samples)
-    pdf_statistical_junctions = expand(f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{reads}}/{{reads}}.statistical_junctions.pdf", reads=all_samples)
-    pdf_non_statistical_junctions = expand(f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{reads}}/{{reads}}.non_statistical_junctions.pdf", reads=all_samples)
+    pdf = expand(f"{path_results}/{unique_id}_results/samples_results/{{reads}}/{{reads}}.pdf", reads=all_samples)
+    pdf_statistical_genes = expand(f"{path_results}/{unique_id}_results/samples_results/{{reads}}/{{reads}}.statistical_genes.pdf",  reads=all_samples)
+    pdf_statistical_junctions = expand(f"{path_results}/{unique_id}_results/samples_results/{{reads}}/{{reads}}.statistical_junctions.pdf", reads=all_samples)
+    pdf_non_statistical_junctions = expand(f"{path_results}/{unique_id}_results/samples_results/{{reads}}/{{reads}}.non_statistical_junctions.pdf", reads=all_samples)
     listOutputSpliceLauncher.append(pdf)
     listOutputSpliceLauncher.append(pdf_statistical_genes)
     listOutputSpliceLauncher.append(pdf_statistical_junctions)
@@ -215,7 +215,7 @@ if Graphics:
 
 rule SpliceLauncher_Analyse:
     input:
-        merged_files = f"{path_results}/SpliceLauncher/merged_files/{prefix}_{unique_id}.txt",
+        merged_files = f"{path_results}/merged_files/{unique_id}.txt",
         annot = f"{working_directory}/2-processed_data/references/{name_genome}/SpliceLauncherAnnot.txt"
 
     output:
@@ -233,7 +233,7 @@ rule SpliceLauncher_Analyse:
         txt = txt,
         bedOut = bedOut,
         Graphics = Graphics,
-        directory = f"{path_results}/SpliceLauncher/",
+        directory = f"{path_results}/",
         sampleNames = sampleNames
 
     log:
@@ -262,18 +262,18 @@ length_all_samples = len(all_samples)
 outputFilterAnalyse = []
 
 
-filterFileStatistical = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/{prefix}_{unique_id}_outputSpliceLauncher.statistical_junctions{extension}"
-filterFileNonStatistical = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/{prefix}_{unique_id}_outputSpliceLauncher.non_statistical_junctions{extension}"
-filterFilesSampleStatistical = expand(f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{reads}}/{{reads}}.statistical_junctions{extension}", reads=all_samples)
-filterFilesSampleNonStatistical = expand(f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{reads}}/{{reads}}.non_statistical_junctions{extension}", reads=all_samples)
+filterFileStatistical = keep(f"{path_results}/{unique_id}_results/{unique_id}_outputSpliceLauncher.statistical_junctions{extension}")
+filterFileNonStatistical = keep(f"{path_results}/{unique_id}_results/{unique_id}_outputSpliceLauncher.non_statistical_junctions{extension}")
+filterFilesSampleStatistical = expand(f"{path_results}/{unique_id}_results/samples_results/{{reads}}/{{reads}}.statistical_junctions{extension}", reads=all_samples)
+filterFilesSampleNonStatistical = expand(f"{path_results}/{unique_id}_results/samples_results/{{reads}}/{{reads}}.non_statistical_junctions{extension}", reads=all_samples)
 outputFilterAnalyse.append(filterFileStatistical)
 outputFilterAnalyse.append(filterFileNonStatistical)
 outputFilterAnalyse.append(filterFilesSampleStatistical)
 outputFilterAnalyse.append(filterFilesSampleNonStatistical)
 
 
-filterFilesSampleStatisticalFilter = expand(f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{reads}}/{{reads}}.statistical_junctions.filter{extension}", reads=all_samples)
-filterFilesSampleNonStatisticalFilter = expand(f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{reads}}/{{reads}}.non_statistical_junctions.filter{extension}", reads=all_samples)
+filterFilesSampleStatisticalFilter = expand(f"{path_results}/{unique_id}_results/samples_results/{{reads}}/{{reads}}.statistical_junctions.filter{extension}", reads=all_samples)
+filterFilesSampleNonStatisticalFilter = expand(f"{path_results}/{unique_id}_results/samples_results/{{reads}}/{{reads}}.non_statistical_junctions.filter{extension}", reads=all_samples)
 outputFilterAnalyse.append(filterFilesSampleStatisticalFilter)
 outputFilterAnalyse.append(filterFilesSampleNonStatisticalFilter)
 
@@ -288,7 +288,7 @@ thresholdSignificanceLevel = get_config_value(config["SPLICELAUNCHER"]["POST_ANA
 
 rule SpliceLauncher_filter_analyse:
     input:
-        outputSpliceLauncher = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/{prefix}_{unique_id}_outputSpliceLauncher{extension}",
+        outputSpliceLauncher = f"{path_results}/{unique_id}_results/{unique_id}_outputSpliceLauncher{extension}",
 
     output:
         outputFilterAnalyse
@@ -303,7 +303,7 @@ rule SpliceLauncher_filter_analyse:
         maxNonStatisticalSamples = maxNonStatisticalSamples,
         minNonStatisticalReads = minNonStatisticalReads,
         thresholdSignificanceLevel = thresholdSignificanceLevel,
-        directory = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/",
+        directory = f"{path_results}/{unique_id}_results/samples_results/",
         script = os.path.join(SCR, "SpliceLauncher_filter_analyse.r") 
     
     log:
@@ -352,10 +352,10 @@ nb_samples = get_config_value(config["SPLICELAUNCHER"]["SASHIMI_PLOT"].get("NUMB
 rule SpliceLauncher_sashimi_plot:
     input:
         bam = os.path.abspath(f"{path_bam}{name_genome}/mapping/{{group}}/{{reads}}.markdup.bam"),
-        event_file = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{reads}}/{{reads}}.{{junction}}.filter{extension}",
+        event_file = f"{path_results}/{unique_id}_results/samples_results/{{reads}}/{{reads}}.{{junction}}.filter{extension}",
 
     output:
-        directory = directory(f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}/sashimi_plot/{{junction}}/")
+        directory = keep(directory(f"{path_results}/{unique_id}_results/samples_results/{{group}}/{{reads}}/sashimi_plot/{{junction}}/"))
 
     params:
         list_bam = expand(f"{path_bam}{name_genome}/mapping/{{group}}/{{reads}}.markdup.bam", zip, reads=all_samples, group=groups),
@@ -395,38 +395,38 @@ rule SpliceLauncher_sashimi_plot:
 move_inputs = []
 move_outputs = []
 
-filterFilesSampleStatistical_inputs = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{reads}}/{{reads}}.statistical_junctions{extension}"
-filterFilesSampleStatisticalFilter_inputs = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{reads}}/{{reads}}.statistical_junctions.filter{extension}"
-filterFilesSampleNonStatistical_inputs = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{reads}}/{{reads}}.non_statistical_junctions{extension}"
-filterFilesSampleNonStatisticalFilter_inputs = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{reads}}/{{reads}}.non_statistical_junctions.filter{extension}"
+filterFilesSampleStatistical_inputs = f"{path_results}/{unique_id}_results/samples_results/{{reads}}/{{reads}}.statistical_junctions{extension}"
+filterFilesSampleStatisticalFilter_inputs = f"{path_results}/{unique_id}_results/samples_results/{{reads}}/{{reads}}.statistical_junctions.filter{extension}"
+filterFilesSampleNonStatistical_inputs = f"{path_results}/{unique_id}_results/samples_results/{{reads}}/{{reads}}.non_statistical_junctions{extension}"
+filterFilesSampleNonStatisticalFilter_inputs = f"{path_results}/{unique_id}_results/samples_results/{{reads}}/{{reads}}.non_statistical_junctions.filter{extension}"
 move_inputs.append(filterFilesSampleStatistical_inputs)
 move_inputs.append(filterFilesSampleStatisticalFilter_inputs)
 move_inputs.append(filterFilesSampleNonStatistical_inputs)
 move_inputs.append(filterFilesSampleNonStatisticalFilter_inputs)
 
-filterFilesSampleStatistical = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.statistical_junctions{extension}"
-filterFilesSampleStatisticalFilter = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.statistical_junctions.filter{extension}"
-filterFilesSampleNonStatistical = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.non_statistical_junctions{extension}"
-filterFilesSampleNonStatisticalFilter = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.non_statistical_junctions.filter{extension}"
+filterFilesSampleStatistical = keep(f"{path_results}/{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.statistical_junctions{extension}")
+filterFilesSampleStatisticalFilter = keep(f"{path_results}/{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.statistical_junctions.filter{extension}")
+filterFilesSampleNonStatistical = keep(f"{path_results}/{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.non_statistical_junctions{extension}")
+filterFilesSampleNonStatisticalFilter = keep(f"{path_results}/{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.non_statistical_junctions.filter{extension}")
 move_outputs.append(filterFilesSampleStatistical)
 move_outputs.append(filterFilesSampleStatisticalFilter)
 move_outputs.append(filterFilesSampleNonStatistical)
 move_outputs.append(filterFilesSampleNonStatisticalFilter)
 
 if Graphics:
-    pdf_inputs = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{reads}}/{{reads}}.pdf"
-    pdf_statistical_genes_inputs = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{reads}}/{{reads}}.statistical_genes.pdf"
-    pdf_statistical_junctions_inputs = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{reads}}/{{reads}}.statistical_junctions.pdf"
-    pdf_non_statistical_junctions_inputs = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{reads}}/{{reads}}.non_statistical_junctions.pdf"
+    pdf_inputs = f"{path_results}/{unique_id}_results/samples_results/{{reads}}/{{reads}}.pdf"
+    pdf_statistical_genes_inputs = f"{path_results}/{unique_id}_results/samples_results/{{reads}}/{{reads}}.statistical_genes.pdf"
+    pdf_statistical_junctions_inputs = f"{path_results}/{unique_id}_results/samples_results/{{reads}}/{{reads}}.statistical_junctions.pdf"
+    pdf_non_statistical_junctions_inputs = f"{path_results}/{unique_id}_results/samples_results/{{reads}}/{{reads}}.non_statistical_junctions.pdf"
     move_inputs.append(pdf_inputs)
     move_inputs.append(pdf_statistical_genes_inputs)
     move_inputs.append(pdf_statistical_junctions_inputs)
     move_inputs.append(pdf_non_statistical_junctions_inputs)
 
-    pdf = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.pdf"
-    pdf_statistical_genes = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.statistical_genes.pdf"
-    pdf_statistical_junctions = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.statistical_junctions.pdf"
-    pdf_non_statistical_junctions = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.non_statistical_junctions.pdf"
+    pdf = keep(f"{path_results}/{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.pdf")
+    pdf_statistical_genes = keep(f"{path_results}/{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.statistical_genes.pdf")
+    pdf_statistical_junctions = keep(f"{path_results}/{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.statistical_junctions.pdf")
+    pdf_non_statistical_junctions = keep(f"{path_results}/{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.non_statistical_junctions.pdf")
     move_outputs.append(pdf)
     move_outputs.append(pdf_statistical_genes)
     move_outputs.append(pdf_statistical_junctions)
@@ -443,8 +443,8 @@ rule move_SpliceLauncher_outputs:
         move_outputs
 
     params:
-        inputs_directory = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{reads}}",
-        outputs_directory = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}"
+        inputs_directory = f"{path_results}/{unique_id}_results/samples_results/{{reads}}",
+        outputs_directory = f"{path_results}/{unique_id}_results/samples_results/{{group}}/{{reads}}"
 
     priority:1
 
@@ -464,11 +464,11 @@ rule SpliceLauncher_recap:
     input:
         reference = genome,
         mane = mane,
-        statisticalFile = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.statistical_junctions.filter{extension}",
-        nonStatisticalFile = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.non_statistical_junctions.filter{extension}",
+        statisticalFile = f"{path_results}/{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.statistical_junctions.filter{extension}",
+        nonStatisticalFile = f"{path_results}/{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.non_statistical_junctions.filter{extension}",
 
     output:
-        RecapFile = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.recap{extension}"
+        RecapFile = keep(f"{path_results}/{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.recap{extension}")
 
     params:
         Rscript = Rscript,

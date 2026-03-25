@@ -53,6 +53,12 @@ def get_config_value(key, default, value_type=int):
     except ValueError:
         return default  # If conversion fails, return the default.
 
+# Cleaning option
+KEEP_INTERMEDIATE = get_config_value(config["CLEANING_INTERMEDIATE"], int(0))
+
+def keep(path):
+    return temp(path) if KEEP_INTERMEDIATE else path
+
 # Checking the dag and rulegraph options
 args = sys.argv
 dag_mode, rulegraph_mode, filegraph_mode = "--dag" in args, "--rulegraph" in args, "--filegraph" in args
@@ -275,18 +281,22 @@ if use_qc:
     print_once("Module quality_control_fastq ...... OK")
 
     # Define QC output directories
-    directory_data_raw = f"{path_qc}/multiqc/fastq_raw/{prefix}_{unique_id}_data/"
-    html_raw = f"{path_qc}/multiqc/fastq_raw/{prefix}_{unique_id}.html"
+    #### directory_data_raw = f"{path_qc}/multiqc/fastq_raw/{prefix}_{unique_id}_data/"
+    #### html_raw = f"{path_qc}/multiqc/fastq_raw/{prefix}_{unique_id}.html"
 
-    list_inputs.append(directory_data_raw)
-    list_inputs.append(html_raw)
+    # list_inputs.append(directory_data_raw)
+    # list_inputs.append(html_raw)
 
-    if use_trimming:
-        directory_data_trimmed = f"{path_qc}/multiqc/fastq_trimmed/{prefix}_{unique_id}_data/"
-        html_trimmed = f"{path_qc}/multiqc/fastq_trimmed/{prefix}_{unique_id}.html"
+    zip_qc = os.path.abspath(f"{path_results}/{unique_id}_results/zip/{unique_id}_qc.zip")
+    list_inputs.append(zip_qc)
 
-        list_inputs.append(directory_data_trimmed)
-        list_inputs.append(html_trimmed)
+
+    # if use_trimming:
+        #### directory_data_trimmed = f"{path_qc}/multiqc/fastq_trimmed/{prefix}_{unique_id}_data/"
+        #### html_trimmed = f"{path_qc}/multiqc/fastq_trimmed/{prefix}_{unique_id}.html"
+
+        # list_inputs.append(directory_data_trimmed)
+        # list_inputs.append(html_trimmed)
 
 # Check mapping executables
 use_mapping = get_config_value(config["USAGE"].get("MAPPING"), int(0))
@@ -371,11 +381,11 @@ if use_mapping:
         print_once("Module quality_control_bam.smk ...... OK")
 
         # Define BAM QC output directories
-        directory_data_bam = f"{path_qc}/multiqc/BAM/{name_genome}/{prefix}_{unique_id}_data/"
-        html_bam = f"{path_qc}/multiqc/BAM/{name_genome}/{prefix}_{unique_id}.html"
+        #### directory_data_bam = f"{path_qc}/multiqc/BAM/{name_genome}/{prefix}_{unique_id}_data/"
+        #### html_bam = f"{path_qc}/multiqc/BAM/{name_genome}/{prefix}_{unique_id}.html"
 
-        list_inputs.append(directory_data_bam)
-        list_inputs.append(html_bam)
+        # list_inputs.append(directory_data_bam)
+        # list_inputs.append(html_bam)
 
     # Check SpliceLauncher dependencies
     use_SpliceLauncher = get_config_value(config["USAGE"].get("SPLICELAUNCHER"), int(0))
@@ -400,42 +410,52 @@ if use_mapping:
         if use_sashimi:
 
             # Define sashimi plot directories
-            directories_non_statistical_junctions = expand(f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}/sashimi_plot/non_statistical_junctions/", zip, reads=all_samples, group=groups)
-            directories_statistical_junctions = expand(f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}/sashimi_plot/statistical_junctions/", zip, reads=all_samples, group=groups)
+            #### directories_non_statistical_junctions = expand(f"{path_results}/{unique_id}_results/samples_results/{{group}}/{{reads}}/sashimi_plot/non_statistical_junctions/", zip, reads=all_samples, group=groups)
+            #### directories_statistical_junctions = expand(f"{path_results}/{unique_id}_results/samples_results/{{group}}/{{reads}}/sashimi_plot/statistical_junctions/", zip, reads=all_samples, group=groups)
 
-            list_inputs.append(directories_non_statistical_junctions)
-            list_inputs.append(directories_statistical_junctions)
+            # list_inputs.append(directories_non_statistical_junctions)
+            # list_inputs.append(directories_statistical_junctions)
+
+            zip_sashimi = f"{path_results}/{unique_id}_results/zip/{unique_id}_sashimi.zip"
+            list_inputs.append(zip_sashimi)
 
         include: os.path.join(MOD, "SpliceLauncher.smk")
         print_once("Module SpliceLauncher ...... OK")
 
         # Define output report paths
-        count_report = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_report_{date}.txt"
-        directory_count_results = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results"
+        #### count_report = f"{path_results}/{unique_id}_report_{date}.txt"
+        directory_count_results = f"{path_results}/{unique_id}_results"
         
-        filterFileStatistical = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/{prefix}_{unique_id}_outputSpliceLauncher.statistical_junctions{extension}"
-        filterFileNonStatistical = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/{prefix}_{unique_id}_outputSpliceLauncher.non_statistical_junctions{extension}"
-        filterFilesSampleStatistical = expand(f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.statistical_junctions{extension}", zip, reads=all_samples, group=groups)
-        filterFilesSampleNonStatistical = expand(f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.non_statistical_junctions{extension}", zip, reads=all_samples, group=groups)
-        recap_files = expand(f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.recap{extension}", zip, reads=all_samples, group=groups)
+        #### filterFileStatistical = f"{path_results}/{unique_id}_results/{prefix}_{unique_id}_outputSpliceLauncher.statistical_junctions{extension}"
+        #### filterFileNonStatistical = f"{path_results}/{unique_id}_results/{prefix}_{unique_id}_outputSpliceLauncher.non_statistical_junctions{extension}"
+        #### filterFilesSampleStatistical = expand(f"{path_results}/{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.statistical_junctions{extension}", zip, reads=all_samples, group=groups)
+        #### filterFilesSampleNonStatistical = expand(f"{path_results}/{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.non_statistical_junctions{extension}", zip, reads=all_samples, group=groups)
+        #### recap_files = expand(f"{path_results}/{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.recap{extension}", zip, reads=all_samples, group=groups)
         
-        list_inputs.append(filterFileStatistical)
-        list_inputs.append(filterFilesSampleStatistical)
-        list_inputs.append(filterFilesSampleNonStatistical)
-        list_inputs.append(recap_files)
+        # list_inputs.append(filterFileStatistical)
+        # list_inputs.append(filterFilesSampleStatistical)
+        # list_inputs.append(filterFilesSampleNonStatistical)
+        # list_inputs.append(recap_files)
+
+        zip_recap = f"{path_results}/{unique_id}_results/zip/{unique_id}_recap.zip"
+        zip_SpliceLauncher = f"{path_results}/{unique_id}_results/zip/{unique_id}_SpliceLauncher.zip"
+
+        list_inputs.append(zip_recap)
+        list_inputs.append(zip_SpliceLauncher)
+
 
         Graphics =  get_config_value(config["SPLICELAUNCHER"]["ANALYSE"].get("GRAPHICS"), int(0))
         
-        if Graphics:
-            pdf =  expand(f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.pdf", zip, reads=all_samples, group=groups)
-            pdf_statistical_genes = expand(f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.statistical_genes.pdf", zip, reads=all_samples, group=groups)
-            pdf_statistical_junctions = expand(f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.statistical_junctions.pdf", zip, reads=all_samples, group=groups)
-            pdf_non_statistical_junctions = expand(f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.non_statistical_junctions.pdf", zip, reads=all_samples, group=groups)   
+        # if Graphics:
+            #### pdf =  expand(f"{path_results}/{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.pdf", zip, reads=all_samples, group=groups)
+            #### pdf_statistical_genes = expand(f"{path_results}/{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.statistical_genes.pdf", zip, reads=all_samples, group=groups)
+            #### pdf_statistical_junctions = expand(f"{path_results}/{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.statistical_junctions.pdf", zip, reads=all_samples, group=groups)
+            #### pdf_non_statistical_junctions = expand(f"{path_results}/{unique_id}_results/samples_results/{{group}}/{{reads}}/{{reads}}.non_statistical_junctions.pdf", zip, reads=all_samples, group=groups)   
 
-            list_inputs.append(pdf)
-            list_inputs.append(pdf_statistical_genes)
-            list_inputs.append(pdf_statistical_junctions)
-            list_inputs.append(pdf_non_statistical_junctions)
+            # list_inputs.append(pdf)
+            # list_inputs.append(pdf_statistical_genes)
+            # list_inputs.append(pdf_statistical_junctions)
+            # list_inputs.append(pdf_non_statistical_junctions)
         
     if not list_inputs:
         markdup_bai = expand(os.path.abspath(f"{path_bam}{name_genome}/mapping/{{group}}/{{reads}}.markdup.bam.bai"), zip, reads=all_samples, group=groups)
@@ -460,6 +480,10 @@ if not list_inputs:
 
 os.environ["SNAKEMAKE_PRINT"] = "true"
 
+
+include: os.path.join(MOD, "zip.smk")
+print_once("Module zip ...... OK")
+
 # Define the main rule for the Snakemake workflow
 rule all:
     input:
@@ -482,9 +506,9 @@ onsuccess:
 # Hook `onerror`: Error handling and cleanup of files in case of failure
 onerror:
     # Define generated files that need to be removed upon errors
-    merged_files = f"{path_results}/SpliceLauncher/merged_files/{prefix}_{unique_id}.txt"
-    count_report = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_report_{date}.txt"
-    directory_count_results = f"{path_results}/SpliceLauncher/{prefix}_{unique_id}_results"
+    merged_files = f"{path_results}/SpliceLauncher/merged_files/{unique_id}.txt"
+    count_report = f"{path_results}/{unique_id}_report_{date}.txt"
+    directory_count_results = f"{path_results}/{unique_id}_results"
 
     # Check file existence before deletion to prevent errors
     files_to_remove = [merged_files, count_report, directory_count_results]

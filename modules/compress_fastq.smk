@@ -9,7 +9,7 @@ rule compress_fastq:
         preprocess = f"{working_directory}/.tmp/samples/{{id}}.pre"
         
     output:
-        process = f"{working_directory}/.tmp/samples/{{id}}.pro"
+        process = keep(f"{working_directory}/.tmp/samples/{{id}}.pro")
 
     params:
         id = lambda wildcards: wildcards.id,

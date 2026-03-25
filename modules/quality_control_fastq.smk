@@ -42,8 +42,8 @@ rule multiqc_fastq_raw:
         zip2 = expand(f"{path_qc}/fastqc_raw/{{group}}/{{reads}}.2_fastqc.zip", zip, reads=all_samples_raw, group=groups)
 
     output:
-        directory_data = directory(f"{path_qc}/multiqc/fastq_raw/{prefix}_{unique_id}_data/"),
-        html = f"{path_qc}/multiqc/fastq_raw/{prefix}_{unique_id}.html"
+        directory_data = keep(directory(f"{path_qc}/multiqc/fastq_raw/{prefix}_{unique_id}_data/")),
+        html = keep(f"{path_qc}/multiqc/fastq_raw/{prefix}_{unique_id}.html")
         
     params:
         name = f"{prefix}_{unique_id}",
@@ -113,8 +113,8 @@ rule multiqc_fastq_trimmed:
         json = expand(f"{path_qc}/fastp_trimming/{{group}}/{{reads}}.json", zip, reads=all_samples, group=groups)
 
     output:
-        directory_data = directory(f"{path_qc}/multiqc/fastq_trimmed/{prefix}_{unique_id}_data/"),
-        html = f"{path_qc}/multiqc/fastq_trimmed/{prefix}_{unique_id}.html"
+        directory_data = keep(directory(f"{path_qc}/multiqc/fastq_trimmed/{prefix}_{unique_id}_data/")),
+        html = keep(f"{path_qc}/multiqc/fastq_trimmed/{prefix}_{unique_id}.html")
 
     params:
         name = f"{prefix}_{unique_id}",
